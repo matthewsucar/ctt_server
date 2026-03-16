@@ -112,6 +112,9 @@ pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sen
 
         // sync ctt and pbs
         for (target, old_state) in &ctt_node_state {
+            if !conf.expanded_nodes.is_empty() && !conf.expanded_nodes.contains(target) {
+                continue;
+            }
             if let Some((new_state, pbs_comment)) = pbs_node_state.get(target) {
                 handle_transition(
                     target,
