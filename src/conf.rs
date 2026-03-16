@@ -31,6 +31,7 @@ pub struct Conf {
     pub server_addr: String,
     pub node_types: Vec<NodeType>,
     pub auth: Auth,
+#[serde(default)]
     pub nodelist: Vec<String>,
 #[serde(skip)]
     pub expanded_nodes: Vec<String>,
