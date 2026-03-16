@@ -94,6 +94,7 @@ pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sen
             .keys()
             .filter(|t| !ctt_node_state.contains_key(*t))
             .filter(|t| cluster.real_node(t))
+            .filter(|t| conf.expanded_nodes.is_empty() || conf.expanded_nodes.contains(t))
             .collect::<Vec<&String>>()
             .iter()
             .for_each(|t| {
@@ -115,18 +116,20 @@ pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sen
                 )
                 .await;
             } else {
-                warn!("{} not found in pbs", target);
-                if let Some(new_issue) = crate::model::NewIssue::new(
-                    None,
-                    "Node not found in pbs".to_string(),
-                    "Node not found in pbs".to_string(),
-                    target.to_string(),
-                    None,
-                    &cluster,
-                ) {
-                    mutation::issue_open(&new_issue, "ctt", db, &tx, &cluster)
-                        .await
-                        .unwrap();
+                if conf.expanded_nodes.is_empty() || conf.expanded_nodes.contains(target) { //skip unconfigured nodes
+                    warn!("{} not found in pbs", target);
+                    if let Some(new_issue) = crate::model::NewIssue::new(
+                        None,
+                        "Node not found in pbs".to_string(),
+                        "Node not found in pbs".to_string(),
+                        target.to_string(),
+                        None,
+                        &cluster,
+                    ) {
+                        mutation::issue_open(&new_issue, "ctt", db, &tx, &cluster)
+                            .await
+                            .unwrap();
+                    }
                 }
             }
         }

@@ -34,6 +34,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json"] }
 users = "0.11"
 regex = "1"
+nodeset = "0.6.0"
 
 [features]
 default = ["slack"]
