@@ -90,16 +90,23 @@ pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sen
         let desired_state = get_expected_state(db, &cluster).await;
 
         //add any pbs nodes not in ctt into ctt for tracking
-        pbs_node_state
-            .keys()
-            .filter(|t| !ctt_node_state.contains_key(*t))
-            .filter(|t| cluster.real_node(t))
-            .filter(|t| conf.expanded_nodes.is_empty() || conf.expanded_nodes.contains(t))
-            .collect::<Vec<&String>>()
-            .iter()
-            .for_each(|t| {
-                ctt_node_state.insert(t.to_string(), TargetStatus::Online);
-            });
+        if conf.expanded_nodes.is_empty() {
+            pbs_node_state
+                .keys()
+                .filter(|t| !ctt_node_state.contains_key(*t))
+                .filter(|t| cluster.real_node(t))
+                .collect::<Vec<&String>>()
+                .iter()
+                .for_each(|t| {
+                    ctt_node_state.insert(t.to_string(), TargetStatus::Online);
+                });
+        } else {
+            conf.expanded_nodes.iter()
+                .filter(|t| !ctt_node_state.contains_key(*t))
+                .for_each(|t| {
+                    ctt_node_state.insert(t.to_string(), TargetStatus::Online);
+                })
+        }
 
         // sync ctt and pbs
         for (target, old_state) in &ctt_node_state {
