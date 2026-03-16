@@ -103,6 +103,8 @@ pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sen
         } else {
             conf.expanded_nodes.iter()
                 .filter(|t| !ctt_node_state.contains_key(*t))
+                .collect::<Vec<&String>>()
+                .iter()
                 .for_each(|t| {
                     ctt_node_state.insert(t.to_string(), TargetStatus::Online);
                 })
