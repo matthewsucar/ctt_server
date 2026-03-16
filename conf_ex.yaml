@@ -13,3 +13,4 @@ node_types:
 auth:
   admin: ["hsg", "ssg"]
   guest: ["ncar", "root"]
+#nodelist: ["guc[0001-0016]", "gug0001"] #only pay attention to certain nodes
