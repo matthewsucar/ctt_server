@@ -1,5 +1,5 @@
 #![allow(unused_variables)]
-use super::scheduler::{PbsScheduler, SchedulerTrait};
+use super::scheduler::{SchedulerTrait};
 use crate::cluster::ClusterTrait;
 use crate::conf::NodeType;
 use crate::entities::target::TargetStatus;
@@ -12,14 +12,12 @@ use tracing::warn;
 #[derive(Debug)]
 pub struct RegexCluster {
     node_types: Vec<NodeType>,
-    //TODO have sched be of type SchedulerTrait instead
-    sched: PbsScheduler,
+    sched: Box<dyn SchedulerTrait + Send + Sync>,
 }
 
 impl RegexCluster {
     #[instrument]
-    //TODO have sched be of type SchedulerTrait instead
-    pub fn new(node_types: Vec<NodeType>, sched: PbsScheduler) -> Self {
+    pub fn new(node_types: Vec<NodeType>, sched: Box<dyn SchedulerTrait>) -> Self {
         Self { sched, node_types }
     }
 

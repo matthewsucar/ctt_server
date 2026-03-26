@@ -2,12 +2,12 @@ use super::{comment, target};
 use crate::cluster::ClusterTrait;
 use crate::cluster::RegexCluster;
 use crate::Conf;
-use crate::PbsScheduler;
 use async_graphql::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::warn;
+use crate::cluster::scheduler_builder::get_scheduler;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, SimpleObject)]
 #[sea_orm(table_name = "issue")]
@@ -46,7 +46,7 @@ impl Model {
     pub async fn related(&self, ctx: &Context<'_>) -> Vec<target::Model> {
         let db = ctx.data::<Arc<DatabaseConnection>>().unwrap().as_ref();
         let conf = ctx.data::<Conf>().unwrap();
-        let cluster = RegexCluster::new(conf.node_types.clone(), PbsScheduler::new());
+        let cluster = RegexCluster::new(conf.node_types.clone(), get_scheduler(conf));
         self.get_related(db, &cluster).await
     }
 }

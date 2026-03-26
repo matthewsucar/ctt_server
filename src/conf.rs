@@ -33,6 +33,8 @@ pub struct Conf {
     pub auth: Auth,
 #[serde(default)]
     pub nodelist: Vec<String>,
+#[serde(default)]
+    pub backend: String,
 #[serde(skip)]
     pub expanded_nodes: Vec<String>,
 }

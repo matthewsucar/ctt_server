@@ -1,4 +1,3 @@
-use crate::cluster::scheduler::PbsScheduler;
 use crate::cluster::ClusterTrait;
 use crate::cluster::RegexCluster;
 use crate::conf::Conf;
@@ -8,6 +7,7 @@ use crate::entities::issue::ToOffline;
 use crate::entities::target::TargetStatus;
 use crate::model::mutation;
 use crate::ChangeLogMsg;
+use crate::cluster::scheduler_builder::get_scheduler;
 use sea_orm::prelude::Expr;
 use sea_orm::Condition;
 use sea_orm::EntityTrait;
@@ -55,7 +55,7 @@ async fn get_expected_state(
 #[instrument(skip(db, conf))]
 pub async fn cluster_sync(db: Arc<DatabaseConnection>, conf: Conf, tx: mpsc::Sender<ChangeLogMsg>) {
     let mut interval = time::interval(Duration::from_secs(conf.poll_interval));
-    let mut cluster = RegexCluster::new(conf.node_types.clone(), PbsScheduler::new());
+    let mut cluster = RegexCluster::new(conf.node_types.clone(), get_scheduler(&conf));
     // don't let ticks stack up if a sync takes longer than interval
     interval.set_missed_tick_behavior(time::MissedTickBehavior::Delay);
     loop {

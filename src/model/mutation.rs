@@ -6,7 +6,6 @@ use crate::entities::issue::{self, IssueStatus, ToOffline};
 use crate::entities::prelude::*;
 use crate::entities::target::TargetStatus;
 use crate::ChangeLogMsg;
-use crate::PbsScheduler;
 use async_graphql::{Context, InputObject, Object, Result};
 use chrono::Utc;
 use sea_orm::entity::ActiveValue;
@@ -15,6 +14,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, QueryFilter};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tracing::{info, instrument, warn};
+use crate::cluster::scheduler_builder::get_scheduler;
 
 #[derive(InputObject, Debug)]
 pub struct UpdateIssue {
@@ -164,7 +164,7 @@ async fn issue_update(
         && i.to_offline.is_some()
         && i.to_offline != issue.to_offline
     {
-        let mut cluster = RegexCluster::new(conf.node_types.clone(), PbsScheduler::new());
+        let mut cluster = RegexCluster::new(conf.node_types.clone(), get_scheduler(conf));
 
         let target = issue.get_target(db).await.unwrap().name;
         let cousins = cluster.cousins(&target);
@@ -236,7 +236,7 @@ fn node_group(
         }
     }
 }
-
+/*
 #[instrument(skip(status))]
 fn to_offline(
     target: &str,
@@ -259,6 +259,8 @@ fn to_offline(
         .map(|n| n.name())
         .collect()
 }
+
+ */
 #[instrument]
 pub async fn issue_open(
     i: &NewIssue,
@@ -364,7 +366,7 @@ impl Mutation {
         let tx = ctx.data_opt::<mpsc::Sender<ChangeLogMsg>>().unwrap();
         let db = ctx.data_opt::<Arc<DatabaseConnection>>().unwrap().as_ref();
         let conf = ctx.data::<Conf>().unwrap();
-        let cluster = RegexCluster::new(conf.node_types.clone(), PbsScheduler::new());
+        let cluster = RegexCluster::new(conf.node_types.clone(), get_scheduler(conf));
         issue_open(&issue, usr, db, tx, &cluster).await
     }
     #[graphql(guard = "RoleChecker::new(Role::Admin)")]

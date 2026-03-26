@@ -12,4 +12,6 @@ pub trait ClusterTrait {
 
 mod regex_cluster;
 pub mod scheduler;
+pub mod scheduler_builder;
+
 pub use regex_cluster::RegexCluster;
