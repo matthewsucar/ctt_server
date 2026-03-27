@@ -3,26 +3,41 @@ use core::fmt;
 use std::collections::HashMap;
 use tracing::instrument;
 use tracing::{info, warn};
+use std::sync::{Arc, LazyLock, Mutex};
 
 use super::SchedulerTrait;
+
 #[derive(Clone,Debug)]
 struct FakeNode {
+    #[allow(dead_code)]
     hostname: String,
     state: TargetStatus,
     comment: String,
 }
+
+static NODESTATE: LazyLock<Arc<Mutex<HashMap<String, FakeNode>>>> = LazyLock::new(|| {
+    Arc::new(Mutex::new(HashMap::new()))
+});
 pub struct NullScheduler {
-    nodes : HashMap<String, FakeNode>,
 }
 
 impl NullScheduler {
     pub fn new() -> Self {
-        Self { nodes: HashMap::new() }
+        let mut states = NODESTATE.lock().unwrap();
+        if states.is_empty() {
+            for cfgnode in &crate::CONFIG.get().unwrap().expanded_nodes {
+                let faken = FakeNode { hostname : cfgnode.to_string(), state : TargetStatus::Online, comment : String::new(),};
+                states.insert(cfgnode.to_string(), faken);
+            }
+        }
+        Self { }
     }
 
+    #[allow(dead_code)]
     pub fn add_node(&mut self, name: &str) -> Result<(), ()> {
+        let mut states = NODESTATE.lock().unwrap();
         let n = FakeNode { hostname : name.to_string(), state : TargetStatus::Online, comment : String::new(),};
-        self.nodes.insert(name.to_string(), n);
+        states.insert(name.to_string(), n);
         Ok(())
     }
 
@@ -43,8 +58,9 @@ impl Default for NullScheduler {
 impl SchedulerTrait for NullScheduler {
     #[instrument]
     fn nodes_status(&mut self) -> Result<HashMap<String, (TargetStatus, String)>, String> {
+        let states = NODESTATE.lock().unwrap();
         let mut resp = HashMap::new();
-        for (hn, n) in &self.nodes {
+        for (hn, n) in states.iter() {
             resp.insert(hn.to_string(), (n.state, n.comment.to_string()));
         }
         Ok(resp)
@@ -53,7 +69,8 @@ impl SchedulerTrait for NullScheduler {
     #[instrument]
     fn release_node(&mut self, target: &str) -> Result<(), ()> {
         info!("resuming node {}", target);
-        let node = match self.nodes.get_mut(&target.to_string()) {
+        let mut states = NODESTATE.lock().unwrap();
+        let node = match states.get_mut(&target.to_string()) {
             Some(n) => n,
             None => return Err(()),
         };
@@ -65,7 +82,8 @@ impl SchedulerTrait for NullScheduler {
     #[instrument]
     fn offline_node(&mut self, target: &str, comment: &str) -> Result<(), ()> {
         info!("offlining: {}, {}", target, comment);
-        let node = match self.nodes.get_mut(&target.to_string()) {
+        let mut states = NODESTATE.lock().unwrap();
+        let node = match states.get_mut(&target.to_string()) {
             Some(n) => n,
             None => return Err(()),
         };
