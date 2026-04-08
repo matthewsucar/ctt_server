@@ -36,6 +36,9 @@ users = "0.11"
 regex = "1"
 nodeset = "0.6.0"
 
+[build-dependencies]
+vergen-git2 = { version = "9.0.6", features = ["build", "cargo", "rustc", "si"]}
+
 [features]
 default = ["slack"]
 slack = ["slack-morphism"]
