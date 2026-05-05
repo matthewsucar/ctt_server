@@ -53,4 +53,27 @@ impl Query {
             })
             .unwrap_or(vec![])
     }
+
+    #[graphql(guard = "RoleChecker::new(Role::Admin).or(RoleChecker::new(Role::Guest))")]
+    #[instrument(skip(_ctx))]
+    async fn version<'a>(&self,
+        _ctx: &Context<'a>
+    ) -> String {
+        let mut versionstring = String::new();
+        versionstring.push_str(&format!("{}\n", env!("CARGO_PKG_VERSION")).to_string());
+        if let Some(hash) = option_env!("VERGEN_GIT_SHA") {
+            versionstring.push_str(&format!("Commit hash: {hash}\n").to_string());
+        }
+        if let Some(desc) = option_env!("VERGEN_GIT_DESCRIBE") {
+            versionstring.push_str(&format!("Git: {}\n", desc).to_string());
+        }
+        if let Some(branch) = option_env!("VERGEN_GIT_BRANCH") {
+            versionstring.push_str(&format!("Branch: {}\n", branch).to_string());
+        }
+        if let Some(bdate) = option_env!("VERGEN_BUILD_TIMESTAMP") {
+            versionstring.push_str(&format!("Build Date: {}", bdate).to_string());
+        }
+
+        versionstring
+    }
 }
