@@ -38,6 +38,7 @@ impl Related<super::issue::Entity> for Entity {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+#[allow(dead_code)] //Pretty sure this was never used but unsure why the compiler only detects it on sea_orm 2
 impl Entity {
     pub fn for_issue(id: i32) -> Select<Entity> {
         Self::find().filter(Column::IssueId.eq(id))

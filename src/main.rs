@@ -45,6 +45,9 @@ static CONFIG: OnceLock<Conf> = OnceLock::new();
 #[tokio::main]
 #[instrument]
 async fn main() {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Error initializing rustls");
     // crash on panic
     let default_panic = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {

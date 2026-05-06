@@ -12,6 +12,7 @@ use sea_orm::prelude::Expr;
 use sea_orm::Condition;
 use sea_orm::EntityTrait;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, QueryFilter, QuerySelect};
+use sea_orm::ExprTrait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc;
