@@ -195,7 +195,7 @@ async fn issue_update(
         }
 
         //t_o is something, and != i.to_offline, so issue no longer enforces sibling being down
-        if i.to_offline.unwrap() == issue::ToOffline::Node {
+        if i.to_offline.unwrap() == issue::ToOffline::Node || i.to_offline.unwrap() == issue::ToOffline::None {
             for s in siblings {
                 if s == target {
                     continue;
@@ -229,6 +229,7 @@ fn node_group(
 ) -> Vec<String> {
     match group {
         None => vec![],
+        Some(issue::ToOffline::None) => vec![],
         Some(issue::ToOffline::Blade) => cluster.cousins(target),
         Some(issue::ToOffline::Card) => cluster.siblings(target),
         Some(issue::ToOffline::Node) => {

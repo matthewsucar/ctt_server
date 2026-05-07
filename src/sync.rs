@@ -252,6 +252,18 @@ pub async fn related_closing(
     {
         issues.push(iss);
     }
+
+    for iss in t
+        .issues()
+        .filter(entities::issue::Column::Status.eq(IssueStatus::Closing))
+        .filter(entities::issue::Column::ToOffline.eq(Some(ToOffline::None)))
+        .all(db)
+        .await
+        .unwrap()
+    {
+        issues.push(iss);
+    }
+
     issues
 }
 
@@ -404,6 +416,7 @@ pub async fn desired_state(
                         .is_in([IssueStatus::Open, IssueStatus::Opening]),
                 )
                 .filter(Expr::col(entities::issue::Column::ToOffline).is_not_null())
+                .filter(Expr::col(entities::issue::Column::ToOffline).is_not(Some(ToOffline::None)))
                 .one(db)
                 .await
                 .unwrap()
@@ -465,6 +478,17 @@ pub async fn desired_state(
         .unwrap()
     {
         trace!("Down due to node ticket");
+        return (TargetStatus::Down, iss.title);
+    }
+    if let Some(iss) = t
+        .issues()
+        .filter(entities::issue::Column::Status.is_in([IssueStatus::Open, IssueStatus::Opening]))
+        .filter(Expr::col(entities::issue::Column::ToOffline).is(Some(ToOffline::None)))
+        .one(db)
+        .await
+        .unwrap()
+    {
+        trace!("Down due to node ticket and user request");
         return (TargetStatus::Down, iss.title);
     }
     trace!("Online due to no related tickets");

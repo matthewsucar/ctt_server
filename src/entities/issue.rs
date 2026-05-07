@@ -170,4 +170,6 @@ pub enum ToOffline {
     Card,
     #[sea_orm(string_value = "Blade")]
     Blade,
+    #[sea_orm(string_value = "None")]
+    None,
 }
