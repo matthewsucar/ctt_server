@@ -100,10 +100,11 @@ async fn main() {
         .route("/", get(graphiql))
         .route("/api", post(graphql_handler))
         .route_layer(Extension(schema))
-        .route("/api/schema", get(schema_handler))
-        .route_layer(ValidateRequestHeaderLayer::custom(conf.auth.clone()))
+        .route("/api/schema", get(schema_handler));
+#[cfg(feature = "auth")]
+        let app = app.route_layer(ValidateRequestHeaderLayer::custom(conf.auth.clone()));
         //login route can't be protected by auth
-        .route("/login", post(auth::login_handler))
+        let app = app.route("/login", post(auth::login_handler))
         //add logging and timeout to all requests
         .layer(Extension(conf.clone()))
         .layer(
