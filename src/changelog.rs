@@ -13,7 +13,7 @@ use tracing::{info, instrument, warn, Level};
 
 #[cfg(not(feature = "slack"))]
 #[instrument]
-pub async fn slack_updater(mut rx: mpsc::Receiver<String>, _conf: Conf) {
+pub async fn slack_updater(mut rx: mpsc::Receiver<ChangeLogMsg>, _conf: Conf) {
     let mut updates = vec![];
     while let Some(u) = rx.recv().await {
         updates.push(u);
@@ -22,7 +22,7 @@ pub async fn slack_updater(mut rx: mpsc::Receiver<String>, _conf: Conf) {
         return;
     }
     for m in updates {
-        info!(m);
+        info!("{:?}", m);
     }
 }
 
