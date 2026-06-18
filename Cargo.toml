@@ -10,8 +10,8 @@ repository = "https://github.com/Will-Shanks/ctt_server"
 async-graphql = { version = "7", features = ["tracing", "chrono"] }
 async-graphql-axum =  "7"
 async-trait = "0.1"
-axum = "0.7"
-axum-server = { version = "0.7", features = ["tls-rustls"] }
+axum = { version = "0.8", features = ["macros"] }
+axum-server = { version = "0.8", features = ["tls-rustls"] }
 chrono = {version = "0.4", features = ["serde"] }
 config = "0.14"
 futures-util = "0.3"
