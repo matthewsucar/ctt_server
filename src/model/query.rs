@@ -6,6 +6,10 @@ use async_graphql::{Context, Object};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder};
 use std::sync::Arc;
 use tracing::instrument;
+#[allow(unused_imports)]
+use sea_orm::QueryTrait; //for debugging
+#[allow(unused_imports)]
+use sea_orm::{DatabaseBackend}; //for debugging
 
 #[derive(Debug)]
 pub struct Query;
@@ -25,6 +29,8 @@ impl Query {
         &self,
         ctx: &Context<'a>,
         issue_status: Option<issue::IssueStatus>,
+        oldest_created_date: Option<chrono::NaiveDateTime>,
+        newest_created_date: Option<chrono::NaiveDateTime>,
         target: Option<String>,
     ) -> Vec<issue::Model> {
         let db = ctx.data::<Arc<DatabaseConnection>>().unwrap().as_ref();
@@ -40,6 +46,15 @@ impl Query {
         if let Some(t) = target {
             select = select.filter(<target::Entity as sea_orm::EntityTrait>::Column::Name.eq(t));
         }
+        if let Some(ocd) = oldest_created_date {
+            //TODO thoroughly think through the timezone implications here
+            select = select.filter(<issue::Entity as sea_orm::EntityTrait>::Column::CreatedAt.gt(ocd));
+        }
+        if let Some(ncd) = newest_created_date {
+            //TODO thoroughly think through the timezone implications here
+            select = select.filter(<issue::Entity as sea_orm::EntityTrait>::Column::CreatedAt.lt(ncd));
+        }
+        //println!("{:?}", select.clone().build(DatabaseBackend::Sqlite).to_string()); //print the actual query string
         select
             .order_by_asc(crate::entities::target::Column::Name)
             .all(db)

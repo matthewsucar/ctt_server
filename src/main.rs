@@ -128,6 +128,7 @@ async fn main() {
 #[instrument(skip(schema, req))]
 async fn graphql_handler(
     schema: Extension<model::CttSchema>,
+#[cfg(feature = "auth")]
     Extension(role): Extension<auth::RoleGuard>,
     req: GraphQLRequest,
 ) -> GraphQLResponse {
